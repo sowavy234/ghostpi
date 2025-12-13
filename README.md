@@ -256,8 +256,8 @@ MIT License - see LICENSE file for details
 
 ## 📧 Support
 
-- **Issues**: https://github.com/yourusername/ghostpi/issues
-- **Discussions**: https://github.com/yourusername/ghostpi/discussions
+- **Issues**: https://github.com/sowavy234/ghostpi/issues
+- **Discussions**: https://github.com/sowavy234/ghostpi/discussions
 
 ---
 
