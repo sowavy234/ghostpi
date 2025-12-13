@@ -1,0 +1,69 @@
+name: Build GhostPi Images
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      cm_type:
+        description: 'Compute Module Type'
+        required: true
+        default: 'CM5'
+        type: choice
+        options:
+        - CM4
+        - CM5
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3 python3-pip \
+          device-tree-compiler \
+          plymouth plymouth-themes \
+          imagemagick \
+          git \
+          dosfstools \
+          fdisk \
+          parted \
+          kpartx
+    
+    - name: Clone LinuxBootImageFileGenerator
+      run: |
+        git clone https://github.com/robseb/LinuxBootImageFileGenerator.git /tmp/LinuxBootImageFileGenerator
+    
+    - name: Build CM5 Image
+      if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main'
+      run: |
+        sudo ./scripts/build_linux.sh CM5
+      continue-on-error: true
+    
+    - name: Build CM4 Image
+      if: github.event.inputs.cm_type == 'CM4'
+      run: |
+        sudo ./scripts/build_linux.sh CM4
+      continue-on-error: true
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ghostpi-images
+        path: |
+          ${{ github.workspace }}/GhostPi-*.img
+          ${{ github.workspace }}/GhostPi-*.img.gz
+        retention-days: 7
+

@@ -1,0 +1,38 @@
+# Build artifacts
+*.img
+*.img.gz
+*.zip
+/tmp/
+/build/
+/Image_partitions/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/var/log/
+
+# Docker
+Dockerfile.bak
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+

@@ -1,0 +1,16 @@
+[Unit]
+Description=GhostPi Swapfile Manager - Constant Monitoring and Management
+After=local-fs.target
+Before=swap.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/swapfile-manager.sh start
+ExecStop=/usr/local/bin/swapfile-manager.sh stop
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

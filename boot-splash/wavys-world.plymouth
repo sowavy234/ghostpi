@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=Wavy's World
+Description=Welcome to Wavy's World - 3D Space Theme
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/wavys-world
+ScriptFile=/usr/share/plymouth/themes/wavys-world/wavys-world.script
+

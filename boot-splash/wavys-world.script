@@ -1,0 +1,72 @@
+# Plymouth script for Wavy's World boot splash
+# 3D space theme with animated character
+
+# Initialize
+fun refresh_callback() {
+    my.image_alpha = 1.0;
+}
+
+# Set up the background
+Window.SetBackgroundTopColor(0.05, 0.00, 0.15);  # Dark purple
+Window.SetBackgroundBottomColor(0.00, 0.00, 0.00);  # Black
+
+# Create stars background
+stars = [];
+for (i = 0; i < 100; i++) {
+    stars[i] = Image("star.png");
+    stars[i].SetX(Math.Int(Math.random() * Window.GetWidth()));
+    stars[i].SetY(Math.Int(Math.random() * Window.GetHeight()));
+    stars[i].SetOpacity(0.3 + Math.random() * 0.7);
+}
+
+# Create main character sprite (placeholder - will be replaced with 3D render)
+character = Image("character.png");
+character.SetX(Window.GetWidth() / 2 - 200);
+character.SetY(Window.GetHeight() / 2 - 150);
+
+# Create Glock sprite
+glock = Image("glock.png");
+glock.SetX(character.GetX() + 150);
+glock.SetY(character.GetY() + 100);
+
+# Text sprites
+text_welcome = Image("text_welcome.png");
+text_welcome.SetX(Window.GetWidth() / 2 - 300);
+text_welcome.SetY(50);
+
+text_glock = Image("text_glock.png");
+text_glock.SetX(Window.GetWidth() / 2 - 250);
+text_glock.SetY(Window.GetHeight() - 100);
+
+# Animation function
+fun animate() {
+    # Animate stars
+    for (i = 0; i < stars.length; i++) {
+        stars[i].SetY(stars[i].GetY() + 0.5);
+        if (stars[i].GetY() > Window.GetHeight()) {
+            stars[i].SetY(0);
+            stars[i].SetX(Math.Int(Math.random() * Window.GetWidth()));
+        }
+    }
+    
+    # Animate character walking
+    character_x = character.GetX();
+    if (character_x < Window.GetWidth() / 2 - 100) {
+        character.SetX(character_x + 0.3);
+    }
+    
+    # Pulsing text effect
+    time = Math.Int(Time.Get() * 2) % 100;
+    alpha = 0.7 + 0.3 * Math.Sin(time * 0.1);
+    text_welcome.SetOpacity(alpha);
+    text_glock.SetOpacity(alpha);
+}
+
+# Main loop
+fun callback() {
+    animate();
+}
+
+# Set refresh rate
+Plymouth.SetRefreshFunction(callback);
+
