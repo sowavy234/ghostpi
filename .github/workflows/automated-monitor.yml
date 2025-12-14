@@ -1,0 +1,111 @@
+name: Automated Monitor & Health Check
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      run_checks:
+        description: 'Run health checks'
+        required: false
+        default: 'true'
+        type: boolean
+      auto_fix:
+        description: 'Auto-fix issues'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Health Checks
+      run: |
+        echo "Running automated health checks..."
+        
+        # Check repository health
+        echo "## Repository Health Check" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for critical files
+        echo "### Critical Files" >> $GITHUB_STEP_SUMMARY
+        if [ -f "scripts/build_linux.sh" ]; then
+          echo "✅ build_linux.sh exists" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ build_linux.sh missing" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f "services/swapfile-manager.sh" ]; then
+          echo "✅ swapfile-manager.sh exists" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ swapfile-manager.sh missing" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f "boot-splash/wavys-world.script" ]; then
+          echo "✅ boot splash script exists" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ boot splash script missing" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check script permissions
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Script Permissions" >> $GITHUB_STEP_SUMMARY
+        find scripts services helpers -name "*.sh" -type f ! -executable | while read file; do
+          echo "⚠️ $file is not executable" >> $GITHUB_STEP_SUMMARY
+        done || echo "✅ All scripts are executable" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for common issues
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Common Issues Check" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for hardcoded paths
+        if grep -r "/tmp/hackberry" . --exclude-dir=.git 2>/dev/null; then
+          echo "⚠️ Found hardcoded /tmp/hackberry paths" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No hardcoded paths found" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check documentation
+        if [ ! -f "README.md" ]; then
+          echo "❌ README.md missing" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ README.md exists" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Auto-Fix Issues
+      if: github.event.inputs.auto_fix != 'false'
+      run: |
+        echo "Auto-fixing issues..."
+        
+        # Fix script permissions
+        find scripts services helpers -name "*.sh" -type f ! -executable -exec chmod +x {} \;
+        
+        # Check if fixes were made
+        if git diff --quiet; then
+          echo "No fixes needed"
+        else
+          echo "Fixes applied, committing..."
+          git config --global user.name "GhostPi Bot"
+          git config --global user.email "ghostpi-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Automated fix: Script permissions and health checks
+
+[Automated by GitHub Actions]" || echo "No changes to commit"
+          git push origin main || echo "Push failed (may need permissions)"
+        fi
+    
+    - name: Generate Report
+      run: |
+        echo "## Automated Monitor Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Run Time:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Health checks completed" >> $GITHUB_STEP_SUMMARY
+

@@ -72,6 +72,12 @@ if [ -f "$PROJECT_ROOT/scripts/install_auto_update.sh" ]; then
     "$PROJECT_ROOT/scripts/install_auto_update.sh"
 fi
 
+# Install automated monitoring bot
+echo "Installing automated monitoring bot..."
+if [ -f "$PROJECT_ROOT/scripts/install_bot.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_bot.sh"
+fi
+
 # Update initramfs
 echo "Updating initramfs..."
 update-initramfs -u 2>/dev/null || true

@@ -1,0 +1,15 @@
+[Unit]
+Description=GhostPi Automated Monitoring Bot - Constant Problem Detection and Auto-Fix
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ghostpi-bot.sh monitor
+Restart=always
+RestartSec=60
+Environment="AUTO_COMMIT=true"
+
+[Install]
+WantedBy=multi-user.target
+
