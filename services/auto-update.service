@@ -1,0 +1,16 @@
+[Unit]
+Description=GhostPi Auto-Update Service - Automatic Software Updates
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/ghostpi-auto-update.sh update
+ExecStartPost=/usr/local/bin/ghostpi-auto-update.sh check-health
+Restart=on-failure
+RestartSec=3600
+
+[Install]
+WantedBy=multi-user.target
+

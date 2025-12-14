@@ -1,0 +1,12 @@
+[Unit]
+Description=GhostPi Auto-Update Timer - Runs daily updates
+Requires=auto-update.service
+
+[Timer]
+OnBootSec=1h
+OnUnitActiveSec=24h
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
+

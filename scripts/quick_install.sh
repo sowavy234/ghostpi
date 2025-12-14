@@ -66,6 +66,12 @@ if [ -f "$PROJECT_ROOT/services/swapfile-manager.sh" ]; then
     chmod +x /usr/local/bin/swapfile-manager.sh
 fi
 
+# Install auto-update and self-healing services
+echo "Installing auto-update and self-healing services..."
+if [ -f "$PROJECT_ROOT/scripts/install_auto_update.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_auto_update.sh"
+fi
+
 # Update initramfs
 echo "Updating initramfs..."
 update-initramfs -u 2>/dev/null || true

@@ -1,0 +1,14 @@
+[Unit]
+Description=GhostPi Self-Healing Service - Automatic System Repair
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ghostpi-self-heal.sh monitor
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
+
