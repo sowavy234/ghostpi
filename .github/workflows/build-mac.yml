@@ -1,0 +1,131 @@
+name: Build GhostPi Images (Mac Compatible)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cm_type:
+        description: 'Compute Module Type'
+        required: true
+        default: 'CM5'
+        type: choice
+        options:
+        - CM4
+        - CM5
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/build-mac.yml'
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        brew install python3 device-tree-compiler imagemagick git || true
+    
+    - name: Build using Docker (if available)
+      run: |
+        if command -v docker &> /dev/null; then
+          echo "Docker available, using Docker build"
+          ./scripts/build_mac_complete.sh ${{ github.event.inputs.cm_type || 'CM5' }}
+        else
+          echo "Docker not available, creating build structure"
+          ./scripts/build_mac_complete.sh ${{ github.event.inputs.cm_type || 'CM5' }}
+        fi
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ghostpi-images-mac
+        path: |
+          ${{ github.workspace }}/GhostPi-*.img
+          ${{ github.workspace }}/*/GhostPi-*.img
+        retention-days: 7
+        if-no-files-found: warn
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3 python3-pip \
+          device-tree-compiler \
+          plymouth plymouth-themes \
+          imagemagick \
+          git \
+          dosfstools \
+          fdisk \
+          parted \
+          kpartx
+    
+    - name: Clone LinuxBootImageFileGenerator
+      run: |
+        git clone https://github.com/robseb/LinuxBootImageFileGenerator.git /tmp/LinuxBootImageFileGenerator
+    
+    - name: Build Image
+      run: |
+        sudo ./scripts/build_linux.sh ${{ github.event.inputs.cm_type || 'CM5' }}
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ghostpi-images-linux
+        path: |
+          ${{ github.workspace }}/GhostPi-*.img
+          ${{ github.workspace }}/GhostPi-*.img.gz
+        retention-days: 7
+    
+    - name: Create Release
+      if: github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.2.0
+        name: GhostPi v1.2.0 - HackberryPi CM5 Edition
+        body: |
+          ## GhostPi v1.2.0 - HackberryPi CM5 Edition
+          
+          ### Features
+          - Custom 3D boot splash (Welcome to Wavy's World)
+          - HackberryPi CM5 full support
+          - AI-powered services (2025 Edition)
+          - Battery monitoring
+          - AI companion with system graphs
+          - Flipper Zero auto-launch
+          - Comprehensive pentesting tools
+          - Auto-update system
+          - Next-generation self-healing
+          
+          ### Download
+          Flash this image to your SD card and boot!
+          
+          See [RELEASE_v1.2.0.md](RELEASE_v1.2.0.md) for full details.
+          
+          ⚠️ **EDUCATIONAL PURPOSES ONLY**
+        files: |
+          ${{ github.workspace }}/GhostPi-*.img
+          ${{ github.workspace }}/GhostPi-*.img.gz
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
