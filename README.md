@@ -13,6 +13,9 @@ A custom bootable Raspberry Pi image with 3D boot splash, pentesting tools, and 
 - **Pentesting Tools**: Pre-installed security testing suite
 - **Swapfile Service**: Automatic swap management and monitoring
 - **Hardware Detection**: Auto-detects and configures for your Pi model
+- **Flipper Zero Integration**: Auto-detection, code sync, brute force tools, Marauder support
+- **Auto-Update & Self-Healing**: Fully automated system maintenance
+- **AI Coding Assistant**: Like Copilot/Claude for Flipper development
 
 ## 🚀 Quick Start
 
