@@ -54,13 +54,15 @@ jobs:
     - name: Build CM5 Image
       if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main' || github.event_name == 'push'
       run: |
-        sudo ./scripts/build_linux.sh CM5
+        chmod +x scripts/*.sh
+        sudo ./scripts/build_linux_fixed.sh CM5 || sudo ./scripts/build_linux.sh CM5
       continue-on-error: true
     
     - name: Build CM4 Image
       if: github.event.inputs.cm_type == 'CM4'
       run: |
-        sudo ./scripts/build_linux.sh CM4
+        chmod +x scripts/*.sh
+        sudo ./scripts/build_linux_fixed.sh CM4 || sudo ./scripts/build_linux.sh CM4
       continue-on-error: true
     
     - name: Upload artifacts
@@ -70,7 +72,10 @@ jobs:
         path: |
           ${{ github.workspace }}/GhostPi-*.img
           ${{ github.workspace }}/GhostPi-*.img.gz
+          ${{ github.workspace }}/**/GhostPi-*.img
+          ${{ github.workspace }}/**/GhostPi-*.img.gz
         retention-days: 7
+        if-no-files-found: warn
     
     - name: Create Release
       if: (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true') || (github.event_name == 'push' && contains(github.ref, 'refs/heads/main'))
