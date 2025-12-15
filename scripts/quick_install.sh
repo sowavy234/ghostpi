@@ -84,6 +84,18 @@ if [ -f "$PROJECT_ROOT/scripts/install_flipper.sh" ]; then
     "$PROJECT_ROOT/scripts/install_flipper.sh"
 fi
 
+# Install comprehensive pentesting tools (Kali, Parrot, BlackArch)
+echo "Installing pentesting tools (Kali, Parrot, BlackArch)..."
+if [ -f "$PROJECT_ROOT/scripts/install_pentest_tools.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_pentest_tools.sh"
+fi
+
+# Install HackberryPi CM5 support
+echo "Installing HackberryPi CM5 support..."
+if [ -f "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh"
+fi
+
 # Update initramfs
 echo "Updating initramfs..."
 update-initramfs -u 2>/dev/null || true

@@ -1,0 +1,15 @@
+[Unit]
+Description=HackberryPi CM5 Power Management Service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/power-management.sh start
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

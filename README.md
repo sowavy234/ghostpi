@@ -2,6 +2,8 @@
 
 A custom bootable Raspberry Pi image with 3D boot splash, pentesting tools, and automatic swapfile management. Works on **CM4, CM5, Pi 4, and Pi 5**.
 
+**Optimized for HackberryPi CM5** - Ultra portable handheld Linux device with 4" 720x720 TFT touch display and BlackBerry keyboard. See [HackberryPi CM5 Repository](https://github.com/ZitaoTech/HackberryPiCM5) for hardware details.
+
 ![GhostPi](https://img.shields.io/badge/GhostPi-Wavy's%20World-purple)
 ![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-CM4%20%7C%20CM5-red)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -10,7 +12,11 @@ A custom bootable Raspberry Pi image with 3D boot splash, pentesting tools, and 
 
 - **Custom 3D Boot Splash**: "Welcome to Wavy's World" with animated character, tattoos, and Glock
 - **Universal Compatibility**: Works on CM4, CM5, Pi 4, Pi 5
-- **Pentesting Tools**: Pre-installed security testing suite
+- **HackberryPi CM5 Optimized**: Full support for HackberryPi CM5 hardware
+  - **Power Management**: Call button = Power On, Call End button = Power Off/Shutdown
+  - **Touchscreen**: 4" 720x720 TFT touch display fully configured
+  - **Keyboard**: BlackBerry Q10/Q20/9900 keyboard support
+- **Pentesting Tools**: Pre-installed security testing suite (Kali, Parrot, BlackArch tools)
 - **Swapfile Service**: Automatic swap management and monitoring
 - **Hardware Detection**: Auto-detects and configures for your Pi model
 - **Flipper Zero Integration**: Auto-detection, code sync, brute force tools, Marauder support
@@ -19,14 +25,30 @@ A custom bootable Raspberry Pi image with 3D boot splash, pentesting tools, and 
 
 ## 🚀 Quick Start
 
+### Installation Sequence for HackberryPi CM5
+
+1. **Flash the image** to SD card (see Flashing section below)
+2. **Insert SD card** into HackberryPi CM5
+3. **Power on** using the **Call button** (top left)
+4. **First boot** will:
+   - Configure touchscreen (720x720)
+   - Set up power management
+   - Install pentesting tools
+   - Configure Flipper Zero integration
+5. **Calibrate touchscreen** (if needed):
+   ```bash
+   sudo calibrate-touchscreen.sh
+   ```
+6. **Power off** by holding **Call End button** for 3 seconds
+
 ### On Linux (Ubuntu/Debian)
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ghostpi.git
+git clone https://github.com/sowavy234/ghostpi.git
 cd ghostpi
 
-# Build for CM5 (default)
+# Build for CM5 (default) - Optimized for HackberryPi CM5
 sudo ./scripts/build_linux.sh CM5
 
 # Or build for CM4
@@ -84,7 +106,47 @@ sudo ./scripts/quick_install.sh
 - 16GB+ SD card
 - Adequate power supply
 
+### HackberryPi CM5 Specific
+- **Hardware**: HackberryPi CM5 device (see [HackberryPi CM5 Repository](https://github.com/ZitaoTech/HackberryPiCM5))
+- **Display**: 4" 720x720 TFT touch display (included)
+- **Keyboard**: BlackBerry Q10, Q20, or 9900 keyboard
+- **Power**: 5000mAh LiPo battery (included)
+- **Buttons**: Call button (power on), Call End button (power off)
+
 ## 🔧 Installation
+
+### HackberryPi CM5 Installation Sequence
+
+1. **Download/Clone** this repository
+2. **Build the image**:
+   ```bash
+   sudo ./scripts/build_linux.sh CM5
+   ```
+3. **Flash to SD card** (see Flashing section)
+4. **Insert SD card** into HackberryPi CM5
+5. **Power on** using **Call button** (top left on keyboard)
+6. **First boot setup**:
+   - Touchscreen will auto-configure
+   - Power management service starts automatically
+   - Pentesting tools install in background
+7. **Calibrate touchscreen** (optional):
+   ```bash
+   sudo calibrate-touchscreen.sh
+   ```
+8. **Power off**: Hold **Call End button** for 3 seconds
+
+### Power Management (HackberryPi CM5)
+
+- **Power On**: Press **Call button** (top left)
+- **Sleep**: Brief press **Call End button**
+- **Shutdown**: Hold **Call End button** for 3 seconds
+
+### Touchscreen Configuration
+
+The 720x720 touchscreen is automatically configured. To recalibrate:
+```bash
+sudo calibrate-touchscreen.sh
+```
 
 ### Method 1: Build from Source (Linux)
 

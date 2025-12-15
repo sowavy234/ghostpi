@@ -1,0 +1,13 @@
+App(
+    appid="apps.flipper_buddy",
+    name="Flipper Buddy",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_buddy_main",
+    fap_category="Tools",
+    fap_icon="icon.png",
+    fap_icon_assets="assets",
+    fap_version="1.0.0",
+    fap_author="GhostPi / Wavy's World",
+    fap_description="Your AI-powered companion for Flipper Zero - Educational pentesting tools",
+)
+
