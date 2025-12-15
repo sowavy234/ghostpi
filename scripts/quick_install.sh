@@ -96,6 +96,26 @@ if [ -f "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh" ]; then
     "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh"
 fi
 
+# Install enhanced terminal
+echo "Installing enhanced terminal..."
+cp "$PROJECT_ROOT/terminal/wavy-terminal.sh" /usr/local/bin/ 2>/dev/null || true
+chmod +x /usr/local/bin/wavy-terminal.sh 2>/dev/null || true
+
+# Install update system
+echo "Installing update system..."
+cp "$PROJECT_ROOT/scripts/wavy-update.sh" /usr/local/bin/ 2>/dev/null || true
+chmod +x /usr/local/bin/wavy-update.sh 2>/dev/null || true
+
+# Install LED control
+echo "Installing LED control..."
+cp "$PROJECT_ROOT/hackberry-cm5/wavy-led-control.sh" /usr/local/bin/ 2>/dev/null || true
+chmod +x /usr/local/bin/wavy-led-control.sh 2>/dev/null || true
+
+# Install speaker notifications
+echo "Installing speaker notifications..."
+cp "$PROJECT_ROOT/hackberry-cm5/speaker-notifications.sh" /usr/local/bin/ 2>/dev/null || true
+chmod +x /usr/local/bin/speaker-notifications.sh 2>/dev/null || true
+
 # Update initramfs
 echo "Updating initramfs..."
 update-initramfs -u 2>/dev/null || true

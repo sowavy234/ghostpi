@@ -282,19 +282,96 @@ commit_fixes() {
     }
 }
 
+# Check cloud connectivity
+check_cloud_connectivity() {
+    log "Checking cloud connectivity..."
+    
+    local cloud_connected=false
+    
+    # Check internet
+    if ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        # Check GitHub API
+        if curl -s --max-time 5 "https://api.github.com" >/dev/null 2>&1; then
+            cloud_connected=true
+            log "✓ Cloud connected"
+        else
+            log "⚠ Internet connected but GitHub API unreachable"
+        fi
+    else
+        log "✗ No internet connection"
+    fi
+    
+    if [ "$cloud_connected" = "false" ]; then
+        # Try to restore network
+        log "Attempting to restore network connectivity..."
+        systemctl restart networking 2>/dev/null || systemctl restart NetworkManager 2>/dev/null || true
+        sleep 5
+        
+        # Retry
+        if ping -c 1 8.8.8.8 >/dev/null 2>&1 && curl -s --max-time 5 "https://api.github.com" >/dev/null 2>&1; then
+            log "✓ Cloud connectivity restored"
+            cloud_connected=true
+        fi
+    fi
+    
+    return $([ "$cloud_connected" = "true" ] && echo 0 || echo 1)
+}
+
+# Auto-update system
+auto_update_system() {
+    if ! check_cloud_connectivity; then
+        log "Skipping auto-update (no cloud connection)"
+        return 1
+    fi
+    
+    log "Running automatic system update..."
+    
+    # Update package lists
+    apt-get update -qq 2>/dev/null || true
+    
+    # Check for updates
+    local updates=$(apt list --upgradable 2>/dev/null | grep -c upgradable || echo "0")
+    
+    if [ "$updates" -gt 0 ]; then
+        log "Found $updates updates available"
+        
+        # Auto-update (non-interactive)
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get upgrade -y -qq 2>/dev/null && {
+            log "✓ System updated successfully"
+            
+            # Notify user
+            /usr/local/bin/speaker-notifications.sh update 2>/dev/null || true
+            
+            return 0
+        } || {
+            log "✗ Update failed"
+            return 1
+        }
+    else
+        log "System is up to date"
+        return 0
+    fi
+}
+
 # Main monitoring loop
 monitor() {
-    log "GhostPi Automated Monitor Bot started"
+    log "GhostPi Automated Monitor Bot started (Enhanced)"
     log "Check interval: ${CHECK_INTERVAL}s"
     log "Auto-commit: $AUTO_COMMIT"
+    log "Cloud connectivity monitoring: Enabled"
     
     while true; do
         # Run health check
         check_system_health
         health_status=$?
         
-        # Check for updates (less frequently)
+        # Check cloud connectivity
+        check_cloud_connectivity
+        
+        # Auto-update system (every hour)
         if [ $(($(date +%s) % 3600)) -eq 0 ]; then
+            auto_update_system
             check_for_updates
         fi
         
@@ -306,7 +383,8 @@ monitor() {
         # Log status
         local uptime=$(uptime -p)
         local load=$(uptime | awk -F'load average:' '{print $2}')
-        log "Status - Uptime: $uptime, Load: $load, Health: OK"
+        local cloud_status=$(check_cloud_connectivity && echo "Connected" || echo "Disconnected")
+        log "Status - Uptime: $uptime, Load: $load, Health: OK, Cloud: $cloud_status"
         
         sleep "$CHECK_INTERVAL"
     done
