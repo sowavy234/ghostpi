@@ -16,10 +16,24 @@ A custom bootable Raspberry Pi image with 3D boot splash, pentesting tools, and 
   - **Power Management**: Call button = Power On, Call End button = Power Off/Shutdown
   - **Touchscreen**: 4" 720x720 TFT touch display fully configured
   - **Keyboard**: BlackBerry Q10/Q20/9900 keyboard support
+  - **Battery Monitoring**: I2C-based voltage measurement with real-time status
+  - **LED Control**: Custom notification patterns (heartbeat, breathing, etc.)
+  - **Speaker Notifications**: Audio alerts for system events
+- **AI Companion**: System monitoring with graphs (like Parrot OS)
+  - Real-time CPU, Memory, Disk usage visualization
+  - Battery status integration
+  - Network statistics
+  - Health analysis and warnings
+- **Enhanced Terminal**: System info banner with kernel, firmware, battery, network stats
 - **Pentesting Tools**: Pre-installed security testing suite (Kali, Parrot, BlackArch tools)
 - **Swapfile Service**: Automatic swap management and monitoring
 - **Hardware Detection**: Auto-detects and configures for your Pi model
-- **Flipper Zero Integration**: Auto-detection, code sync, brute force tools, Marauder support
+- **Flipper Zero Integration**: 
+  - Auto-detection and auto-launch terminal when connected
+  - Coding help and tool usage guides
+  - Code sync, brute force tools, Marauder support
+  - Flipper Buddy app
+- **Update System**: Simple menu-driven updates (`wavy-update`)
 - **Auto-Update & Self-Healing**: Fully automated system maintenance
 - **AI Coding Assistant**: Like Copilot/Claude for Flipper development
 
@@ -174,13 +188,19 @@ sudo ./scripts/quick_install.sh
 
 ## 💾 Flashing the Image
 
+### Download Pre-built Image
+
+1. Go to [Releases](https://github.com/sowavy234/ghostpi/releases)
+2. Download the latest `GhostPi-*.img` file
+3. Flash to SD card using one of the methods below
+
 ### Using dd (Linux/macOS)
 
 ```bash
 # Find your SD card
 lsblk  # or diskutil list (macOS)
 
-# Flash image (REPLACE sdX with your device)
+# Flash image (REPLACE sdX with your device - be careful!)
 sudo dd if=GhostPi-CM5-*.img of=/dev/sdX bs=4M status=progress
 sync
 ```
@@ -191,6 +211,16 @@ sync
 2. Select "Use custom image"
 3. Choose your `GhostPi-*.img` file
 4. Select SD card and write
+5. Wait for completion
+
+### After Flashing
+
+1. **Insert SD card** into HackberryPi CM5
+2. **Power on** using **Call button** (top left on keyboard)
+3. **First boot** will automatically configure everything
+4. **Flipper Zero**: Connect via USB - terminal auto-launches
+5. **Battery**: Monitor with `battery-status` or in terminal banner
+6. **System Monitor**: Run `wavy-companion` for graphs
 
 ## 🎨 Customization
 
@@ -218,7 +248,9 @@ Edit `boot-splash/wavys-world.script` to adjust:
 - Text effects
 - Star count and movement
 
-## 🔍 Swapfile Service
+## 🔍 System Services
+
+### Swapfile Service
 
 The swapfile service automatically:
 - Creates 2GB swapfile on first boot
@@ -226,37 +258,78 @@ The swapfile service automatically:
 - Increases swap if memory is low
 - Prevents out-of-memory crashes
 
-### Check Status
+### Battery Monitor Service
+
+Monitors HackberryPi CM5 battery:
+- I2C-based voltage measurement
+- Real-time percentage calculation
+- Estimated remaining time
+- Low battery warnings
 
 ```bash
-sudo systemctl status swapfile-manager
-sudo /usr/local/bin/swapfile-manager.sh status
+# Check battery status
+battery-status
+
+# View in terminal
+wavy-terminal  # Shows battery in banner
 ```
 
-### View Logs
+### AI Companion Service
 
+System monitoring with graphs:
 ```bash
-sudo journalctl -u swapfile-manager -f
-cat /var/log/swapfile-manager.log
+# Launch AI companion dashboard
+wavy-companion
+
+# Shows real-time graphs for:
+# - CPU, Memory, Disk usage
+# - Battery status
+# - Network statistics
+# - System health
 ```
+
+### Flipper Zero Auto-Launch
+
+Automatically detects and launches terminal when Flipper Zero connects:
+- Opens coding help terminal
+- Shows tool usage guides
+- Provides code examples
+- Interactive coding assistant
 
 ## 📁 Project Structure
 
 ```
 ghostpi/
 ├── README.md                    # This file
-├── QUICKSTART.md               # Quick start guide
-├── INSTALL.md                  # Detailed installation
+├── FEATURES_SUMMARY.md         # Complete features list
+├── RELEASE_v1.2.0.md          # Release notes
 ├── scripts/                    # Build scripts
 │   ├── build_linux.sh         # Linux build script
 │   ├── build_mac.sh           # macOS build script
-│   └── quick_install.sh      # Quick install on Pi
+│   ├── quick_install.sh       # Quick install on Pi
+│   ├── wavy-update.sh         # Update system menu
+│   └── install_hackberry_cm5.sh # HackberryPi CM5 setup
+├── terminal/                   # Enhanced terminal
+│   └── wavy-terminal.sh       # System info terminal
+├── ai-companion/              # AI companion
+│   └── wavy-ai-companion.sh   # System monitoring with graphs
+├── hackberry-cm5/             # HackberryPi CM5 support
+│   ├── power-management.sh    # Power button handling
+│   ├── touchscreen-config.sh  # Touchscreen setup
+│   ├── battery-monitor.sh     # Battery monitoring
+│   ├── wavy-led-control.sh    # LED control
+│   └── speaker-notifications.sh # Audio alerts
+├── flipper-zero/              # Flipper Zero integration
+│   ├── flipper-auto-launch.sh # Auto-launch on connect
+│   ├── flipper-coding-terminal.sh # Coding help
+│   └── apps/flipper_buddy/    # Flipper Buddy app
 ├── boot-splash/               # Boot splash theme
 │   ├── wavys-world.plymouth  # Plymouth config
 │   └── wavys-world.script    # Animation script
 └── services/                  # System services
     ├── swapfile-manager.service
-    └── swapfile-manager.sh
+    ├── battery-monitor.service
+    └── hackberry-cm5.service
 ```
 
 ## 🐛 Troubleshooting
@@ -315,9 +388,11 @@ MIT License - see LICENSE file for details
 
 ## 🙏 Credits
 
+- **HackberryPi CM5**: https://github.com/ZitaoTech/HackberryPiCM5 - Hardware reference and inspiration
 - **LinuxBootImageFileGenerator**: https://github.com/robseb/LinuxBootImageFileGenerator
 - **Plymouth**: Boot splash system
 - **Raspberry Pi Foundation**: Hardware support
+- **Kali Linux, Parrot OS, BlackArch**: Pentesting tools
 
 ## 📧 Support
 
