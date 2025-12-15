@@ -52,7 +52,7 @@ jobs:
         git clone https://github.com/robseb/LinuxBootImageFileGenerator.git /tmp/LinuxBootImageFileGenerator
     
     - name: Build CM5 Image
-      if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main'
+      if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main' || github.event_name == 'push'
       run: |
         sudo ./scripts/build_linux.sh CM5
       continue-on-error: true
@@ -73,7 +73,7 @@ jobs:
         retention-days: 7
     
     - name: Create Release
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true'
+      if: (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true') || (github.event_name == 'push' && contains(github.ref, 'refs/heads/main'))
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.event.inputs.cm_type == 'CM5' && '1.1.0' || '1.1.0' }}
