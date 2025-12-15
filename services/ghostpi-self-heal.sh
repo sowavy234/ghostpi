@@ -160,6 +160,56 @@ EOF
     return 1
 }
 
+# Check and fix script syntax errors
+fix_script_errors() {
+    local fixed=0
+    local script_dirs=(
+        "/usr/local/bin"
+        "/opt/ghostpi/repo/scripts"
+        "/opt/ghostpi/repo/flipper-zero"
+        "/opt/ghostpi/repo/services"
+    )
+    
+    log "Checking for script syntax errors..."
+    
+    for dir in "${script_dirs[@]}"; do
+        if [ ! -d "$dir" ]; then
+            continue
+        fi
+        
+        # Find all shell scripts
+        while IFS= read -r script; do
+            # Check syntax
+            if ! bash -n "$script" 2>/dev/null; then
+                local error=$(bash -n "$script" 2>&1)
+                log "Syntax error found in $script: $error"
+                
+                # Try to fix common issues
+                # Missing closing quote
+                if echo "$error" | grep -q "unexpected token"; then
+                    # Check for missing quotes
+                    if grep -q 'SCRIPT_DIR="$(cd.*&& pwd)$' "$script" 2>/dev/null; then
+                        sed -i 's/SCRIPT_DIR="$(cd.*&& pwd)$/SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" \&\& pwd)"/' "$script" 2>/dev/null && {
+                            log "✓ Fixed missing quote in $script"
+                            fixed=$((fixed + 1))
+                        }
+                    fi
+                fi
+                
+                # Make sure script is executable
+                chmod +x "$script" 2>/dev/null || true
+            fi
+        done < <(find "$dir" -type f -name "*.sh" 2>/dev/null)
+    done
+    
+    if [ $fixed -gt 0 ]; then
+        log "✓ Fixed $fixed script syntax errors"
+        return 0
+    fi
+    
+    return 1
+}
+
 # Comprehensive health check
 health_check() {
     local issues=0
@@ -184,6 +234,9 @@ health_check() {
     
     # Check boot config
     fix_boot_config && fixed=$((fixed + 1)) || true
+    
+    # Check script syntax errors
+    fix_script_errors && fixed=$((fixed + 1)) || true
     
     log "Health check complete: $fixed issues fixed, $issues issues remain"
     

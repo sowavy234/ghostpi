@@ -119,6 +119,30 @@ check_system_health() {
         fi
     fi
     
+    # Check script syntax errors
+    if [ -d "$GIT_REPO_DIR" ]; then
+        local syntax_errors=0
+        while IFS= read -r script; do
+            if ! bash -n "$script" 2>/dev/null; then
+                syntax_errors=$((syntax_errors + 1))
+                log "Syntax error in: $script"
+                
+                # Try common fixes
+                # Missing closing quote on SCRIPT_DIR
+                if grep -q 'SCRIPT_DIR="$(cd.*&& pwd)$' "$script" 2>/dev/null; then
+                    sed -i 's/SCRIPT_DIR="$(cd.*&& pwd)$/SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" \&\& pwd)"/' "$script" 2>/dev/null && {
+                        log "✓ Fixed syntax error in $script"
+                        fixes_applied=$((fixes_applied + 1))
+                    }
+                fi
+            fi
+        done < <(find "$GIT_REPO_DIR" -type f -name "*.sh" 2>/dev/null)
+        
+        if [ $syntax_errors -gt 0 ]; then
+            log "Found $syntax_errors script syntax errors"
+        fi
+    fi
+    
     log "Health check complete: $fixes_applied fixes applied, $issues issues remain"
     
     return $issues
