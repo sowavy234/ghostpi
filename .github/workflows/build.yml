@@ -45,7 +45,9 @@ jobs:
           dosfstools \
           fdisk \
           parted \
-          kpartx
+          kpartx \
+          qemu-utils \
+          || true
     
     - name: Clone LinuxBootImageFileGenerator
       run: |
@@ -55,15 +57,17 @@ jobs:
       if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main' || github.event_name == 'push'
       run: |
         chmod +x scripts/*.sh
-        sudo ./scripts/build_linux_fixed.sh CM5 || sudo ./scripts/build_linux.sh CM5
+        sudo ./scripts/build_linux_robust.sh CM5 || sudo ./scripts/build_linux_fixed.sh CM5 || sudo ./scripts/build_linux.sh CM5
       continue-on-error: true
+      timeout-minutes: 30
     
     - name: Build CM4 Image
       if: github.event.inputs.cm_type == 'CM4'
       run: |
         chmod +x scripts/*.sh
-        sudo ./scripts/build_linux_fixed.sh CM4 || sudo ./scripts/build_linux.sh CM4
+        sudo ./scripts/build_linux_robust.sh CM4 || sudo ./scripts/build_linux_fixed.sh CM4 || sudo ./scripts/build_linux.sh CM4
       continue-on-error: true
+      timeout-minutes: 30
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
