@@ -96,6 +96,12 @@ if [ -f "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh" ]; then
     "$PROJECT_ROOT/scripts/install_hackberry_cm5.sh"
 fi
 
+# Install 2025 Advanced Services
+echo "Installing GhostPi 2025 Advanced Services..."
+if [ -f "$PROJECT_ROOT/scripts/install_2025_services.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_2025_services.sh"
+fi
+
 # Install enhanced terminal
 echo "Installing enhanced terminal..."
 cp "$PROJECT_ROOT/terminal/wavy-terminal.sh" /usr/local/bin/ 2>/dev/null || true

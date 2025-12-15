@@ -1,0 +1,15 @@
+[Unit]
+Description=GhostPi Advanced Automated Bot 2025
+After=multi-user.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ghostpi-bot-2025.sh monitor
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

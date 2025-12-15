@@ -1,0 +1,15 @@
+[Unit]
+Description=GhostPi Advanced Swapfile Manager 2025
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/swapfile-manager-2025.sh start
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
