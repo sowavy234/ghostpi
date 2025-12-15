@@ -139,7 +139,10 @@ predictive_memory_management() {
     # Adaptive response to current conditions
     if [ "$ADAPTIVE_MODE" = "true" ]; then
         local mem_pct=$((mem_used * 100 / mem_total))
-        local swap_pct=$((swap_used * 100 / swap_total)) if [ "$swap_total" -gt 0 ]; then 0; fi
+        local swap_pct=0
+        if [ "$swap_total" -gt 0 ]; then
+            swap_pct=$((swap_used * 100 / swap_total))
+        fi
         
         # If memory usage is high and swap is filling up, increase swap
         if [ "$mem_pct" -gt 75 ] && [ "$swap_pct" -gt 80 ]; then
@@ -170,7 +173,10 @@ monitor_performance() {
         local swap_used=$(free -m | awk '/^Swap:/ {print $3}')
         local swap_total=$(free -m | awk '/^Swap:/ {print $2}')
         local mem_pct=$((mem_used * 100 / mem_total))
-        local swap_pct=$((swap_used * 100 / swap_total)) if [ "$swap_total" -gt 0 ]; then 0; fi
+        local swap_pct=0
+        if [ "$swap_total" -gt 0 ]; then
+            swap_pct=$((swap_used * 100 / swap_total))
+        fi
         
         # Critical alerts
         if [ "$mem_pct" -gt 95 ]; then
