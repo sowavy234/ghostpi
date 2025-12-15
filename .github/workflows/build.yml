@@ -76,23 +76,37 @@ jobs:
       if: (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true') || (github.event_name == 'push' && contains(github.ref, 'refs/heads/main'))
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${{ github.event.inputs.cm_type == 'CM5' && '1.1.0' || '1.1.0' }}
-        name: GhostPi ${{ github.event.inputs.cm_type }} v1.1.0
+        tag_name: v1.2.0
+        name: GhostPi v1.2.0 - HackberryPi CM5 Edition
         body: |
-          ## GhostPi ${{ github.event.inputs.cm_type }} v1.1.0
+          ## GhostPi v1.2.0 - HackberryPi CM5 Edition
           
           ### Features
           - Custom 3D boot splash (Welcome to Wavy's World)
-          - Auto-update system
+          - HackberryPi CM5 full support (power, touchscreen, battery, LED, speakers)
+          - Battery monitoring via I2C (like HackberryPi CM5)
+          - AI companion with system graphs (like Parrot OS)
+          - Enhanced terminal with system info banner
+          - Flipper Zero auto-launch terminal
+          - Comprehensive pentesting tools (Kali, Parrot, BlackArch)
+          - Auto-update system with wavy-update menu
           - Self-healing service
-          - Management helper tool
           - Swapfile management
-          - Universal Raspberry Pi support
+          - Universal Raspberry Pi support (CM4, CM5, Pi 4, Pi 5)
           
-          ### Download
-          Flash this image to your SD card and boot!
+          ### Installation
+          1. Download the .img file
+          2. Flash to SD card using Raspberry Pi Imager or dd
+          3. Insert into HackberryPi CM5
+          4. Power on with Call button
+          5. First boot auto-configures everything
           
-          See [RELEASE_v1.1.0.md](RELEASE_v1.1.0.md) for full details.
+          ### Hardware Reference
+          Based on: https://github.com/ZitaoTech/HackberryPiCM5
+          
+          See [RELEASE_v1.2.0.md](RELEASE_v1.2.0.md) for full details.
+          
+          ⚠️ **EDUCATIONAL PURPOSES ONLY**
         files: |
           ${{ github.workspace }}/GhostPi-*.img
           ${{ github.workspace }}/GhostPi-*.img.gz
