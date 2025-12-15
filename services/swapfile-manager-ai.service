@@ -1,0 +1,15 @@
+[Unit]
+Description=GhostPi AI-Powered Swapfile Manager 2025
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/swapfile-manager-ai.sh monitor
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

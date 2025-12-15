@@ -72,10 +72,16 @@ if [ -f "$PROJECT_ROOT/scripts/install_auto_update.sh" ]; then
     "$PROJECT_ROOT/scripts/install_auto_update.sh"
 fi
 
-# Install automated monitoring bot
-echo "Installing automated monitoring bot..."
-if [ -f "$PROJECT_ROOT/scripts/install_bot.sh" ]; then
-    "$PROJECT_ROOT/scripts/install_bot.sh"
+# Install AI-powered services (2025 Edition)
+echo "Installing next-generation AI-powered services..."
+if [ -f "$PROJECT_ROOT/scripts/upgrade_to_ai.sh" ]; then
+    "$PROJECT_ROOT/scripts/upgrade_to_ai.sh"
+else
+    # Fallback to standard services
+    echo "Installing automated monitoring bot..."
+    if [ -f "$PROJECT_ROOT/scripts/install_bot.sh" ]; then
+        "$PROJECT_ROOT/scripts/install_bot.sh"
+    fi
 fi
 
 # Install Flipper Zero integration
