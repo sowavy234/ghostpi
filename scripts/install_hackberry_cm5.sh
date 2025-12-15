@@ -33,6 +33,27 @@ systemctl start hackberry-cm5.service
 echo "Configuring touchscreen..."
 /usr/local/bin/touchscreen-config.sh install
 
+# Install battery monitoring
+echo "Installing battery monitoring..."
+cp "$PROJECT_ROOT/hackberry-cm5/battery-monitor.sh" /usr/local/bin/
+chmod +x /usr/local/bin/battery-monitor.sh
+cp "$PROJECT_ROOT/services/battery-monitor.service" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable battery-monitor.service
+systemctl start battery-monitor.service
+
+# Install AI companion
+echo "Installing AI companion..."
+cp "$PROJECT_ROOT/ai-companion/wavy-ai-companion.sh" /usr/local/bin/
+chmod +x /usr/local/bin/wavy-ai-companion.sh
+
+# Install Flipper auto-launch
+echo "Installing Flipper Zero auto-launch..."
+cp "$PROJECT_ROOT/flipper-zero/flipper-auto-launch.sh" /usr/local/bin/
+cp "$PROJECT_ROOT/flipper-zero/flipper-coding-terminal.sh" /usr/local/bin/
+chmod +x /usr/local/bin/flipper-auto-launch.sh
+chmod +x /usr/local/bin/flipper-coding-terminal.sh
+
 echo ""
 echo "=========================================="
 echo "✓ HackberryPi CM5 support installed!"
