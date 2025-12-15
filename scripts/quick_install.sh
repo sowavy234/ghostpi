@@ -78,6 +78,12 @@ if [ -f "$PROJECT_ROOT/scripts/install_bot.sh" ]; then
     "$PROJECT_ROOT/scripts/install_bot.sh"
 fi
 
+# Install Flipper Zero integration
+echo "Installing Flipper Zero integration..."
+if [ -f "$PROJECT_ROOT/scripts/install_flipper.sh" ]; then
+    "$PROJECT_ROOT/scripts/install_flipper.sh"
+fi
+
 # Update initramfs
 echo "Updating initramfs..."
 update-initramfs -u 2>/dev/null || true

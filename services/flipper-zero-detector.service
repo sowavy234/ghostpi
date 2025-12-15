@@ -1,0 +1,14 @@
+[Unit]
+Description=Flipper Zero Auto-Detection and Companion Service
+After=local-fs.target
+Wants=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/flipper-zero-detector.sh monitor
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
