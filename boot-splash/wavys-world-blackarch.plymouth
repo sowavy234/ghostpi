@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=Wavy's World BlackArch Style
+Description=Welcome to Wavy's World - BlackArch Style (Dark Red/Black Theme)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/wavys-world-blackarch
+ScriptFile=/usr/share/plymouth/themes/wavys-world-blackarch/wavys-world-blackarch.script
+

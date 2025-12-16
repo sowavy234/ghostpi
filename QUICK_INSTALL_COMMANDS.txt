@@ -1,0 +1,34 @@
+==========================================
+QUICK INSTALL COMMANDS FOR CM4
+==========================================
+
+STEP 1: Flash Raspberry Pi OS Lite 64-bit
+- Use Raspberry Pi Imager
+- Enable SSH in settings (gear icon)
+- Set username: pi
+- Set password: (your choice)
+
+STEP 2: SSH into Pi
+ssh pi@<PI_IP_ADDRESS>
+
+STEP 3: Install GhostPi (copy/paste all at once)
+sudo apt-get update && \
+sudo apt-get upgrade -y && \
+sudo apt-get install -y git && \
+cd ~ && \
+git clone https://github.com/sowavy234/ghostpi.git && \
+cd ghostpi && \
+chmod +x scripts/*.sh && \
+sudo ./scripts/quick_install.sh
+
+STEP 4: Reboot
+sudo reboot
+
+STEP 5: After reboot, verify
+wavy-terminal
+sudo systemctl status swapfile-manager.service
+
+==========================================
+That's it! Welcome to Wavy's World! 🎮
+==========================================
+

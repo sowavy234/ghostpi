@@ -13,6 +13,8 @@ RUN apt-get update && \
     binfmt-support \
     dosfstools \
     fdisk \
+    parted \
+    kpartx \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build

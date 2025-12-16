@@ -93,9 +93,7 @@ jobs:
           git config --global user.name "GhostPi Bot"
           git config --global user.email "ghostpi-bot@users.noreply.github.com"
           git add -A
-          git commit -m "Automated fix: Script permissions and health checks
-
-[Automated by GitHub Actions]" || echo "No changes to commit"
+          git commit -m "Automated fix: Script permissions and health checks [Automated by GitHub Actions]" || echo "No changes to commit"
           git push origin main || echo "Push failed (may need permissions)"
         fi
     

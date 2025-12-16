@@ -41,16 +41,37 @@ apt-get install -y \
     imagemagick \
     >/dev/null 2>&1
 
-# Install boot splash
-echo "Installing boot splash..."
-mkdir -p /usr/share/plymouth/themes/wavys-world
+# Install boot splash themes (both Wavy's World and BlackArch style)
+echo "Installing boot splash themes..."
 if [ -d "$PROJECT_ROOT/boot-splash" ]; then
-    cp -r "$PROJECT_ROOT/boot-splash/"* /usr/share/plymouth/themes/wavys-world/ 2>/dev/null || true
+    # Install Wavy's World theme (default - purple/black)
+    mkdir -p /usr/share/plymouth/themes/wavys-world
+    cp "$PROJECT_ROOT/boot-splash/wavys-world.plymouth" /usr/share/plymouth/themes/wavys-world/ 2>/dev/null || true
+    cp "$PROJECT_ROOT/boot-splash/wavys-world.script" /usr/share/plymouth/themes/wavys-world/ 2>/dev/null || true
+    
+    # Install Wavy's World BlackArch Style theme (red/black)
+    mkdir -p /usr/share/plymouth/themes/wavys-world-blackarch
+    cp "$PROJECT_ROOT/boot-splash/wavys-world-blackarch.plymouth" /usr/share/plymouth/themes/wavys-world-blackarch/ 2>/dev/null || true
+    cp "$PROJECT_ROOT/boot-splash/wavys-world-blackarch.script" /usr/share/plymouth/themes/wavys-world-blackarch/ 2>/dev/null || true
+    
+    # Copy shared image files to both themes
+    cp "$PROJECT_ROOT/boot-splash/"*.png /usr/share/plymouth/themes/wavys-world/ 2>/dev/null || true
+    cp "$PROJECT_ROOT/boot-splash/"*.png /usr/share/plymouth/themes/wavys-world-blackarch/ 2>/dev/null || true
 fi
 
-# Set as default theme
+# Set Wavy's World as default theme
 update-alternatives --install /etc/alternatives/default.plymouth default.plymouth \
     /usr/share/plymouth/themes/wavys-world/wavys-world.plymouth 100 2>/dev/null || true
+update-alternatives --install /etc/alternatives/default.plymouth default.plymouth \
+    /usr/share/plymouth/themes/wavys-world-blackarch/wavys-world-blackarch.plymouth 50 2>/dev/null || true
+update-alternatives --set default.plymouth /usr/share/plymouth/themes/wavys-world/wavys-world.plymouth 2>/dev/null || true
+
+# Install boot splash switcher script
+echo "Installing boot splash switcher..."
+if [ -f "$PROJECT_ROOT/scripts/switch_boot_splash.sh" ]; then
+    cp "$PROJECT_ROOT/scripts/switch_boot_splash.sh" /usr/local/bin/ 2>/dev/null || true
+    chmod +x /usr/local/bin/switch_boot_splash.sh 2>/dev/null || true
+fi
 
 # Install swapfile service
 echo "Installing swapfile service..."

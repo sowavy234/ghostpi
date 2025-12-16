@@ -13,19 +13,13 @@ echo "  GhostPi Image Builder for macOS"
 echo "  Target: $CM_TYPE"
 echo "=========================================="
 
-# Use the complete Mac build script
-if [ -f "$SCRIPT_DIR/build_mac_complete.sh" ]; then
-    "$SCRIPT_DIR/build_mac_complete.sh" "$CM_TYPE"
-    exit $?
-fi
-
-# Fallback to Docker method
+# Check if Docker is available
 if command -v docker &> /dev/null; then
     echo "Docker detected. Using Docker to build..."
     
     # Create Dockerfile if it doesn't exist
-    if [ ! -f "$PROJECT_ROOT/Dockerfile.build" ]; then
-        cat > "$PROJECT_ROOT/Dockerfile.build" <<'DOCKERFILE'
+    if [ ! -f "$PROJECT_ROOT/Dockerfile" ]; then
+        cat > "$PROJECT_ROOT/Dockerfile" <<'DOCKERFILE'
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -41,18 +35,16 @@ RUN apt-get update && \
     binfmt-support \
     dosfstools \
     fdisk \
-    parted \
-    kpartx \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
 DOCKERFILE
-        echo "✓ Created Dockerfile.build"
+        echo "✓ Created Dockerfile"
     fi
     
     # Build Docker image
     echo "Building Docker image..."
-    docker build -f "$PROJECT_ROOT/Dockerfile.build" -t ghostpi-builder "$PROJECT_ROOT" || {
+    docker build -t ghostpi-builder "$PROJECT_ROOT" || {
         echo "Docker build failed. Trying alternative method..."
         USE_DOCKER=false
     }
@@ -60,12 +52,13 @@ DOCKERFILE
     if [ "$USE_DOCKER" != "false" ]; then
         # Run build in Docker
         echo "Running build in Docker container..."
-        docker run --rm \
+        docker run --rm -it \
             -v "$PROJECT_ROOT:/build" \
             -v "$HOME/Downloads/ghostpi:/output" \
             -e CM_TYPE="$CM_TYPE" \
+            -e OUTPUT_DIR="/output" \
             ghostpi-builder \
-            bash -c "cd /build && ./scripts/build_linux.sh $CM_TYPE && cp GhostPi-*.img /output/ 2>/dev/null || true"
+            bash -c "cd /build && OUTPUT_DIR=/output ./scripts/build_linux.sh $CM_TYPE"
         
         echo ""
         echo "=========================================="
@@ -76,26 +69,30 @@ DOCKERFILE
     fi
 fi
 
-# Alternative: Provide instructions
+# Alternative: Provide instructions for Linux VM or remote build
 echo ""
 echo "=========================================="
 echo "  Alternative Build Methods"
 echo "=========================================="
 echo ""
-echo "Option 1: Use GitHub Actions (Recommended)"
-echo "  https://github.com/sowavy234/ghostpi/actions"
-echo "  Workflow will build automatically on push"
-echo ""
-echo "Option 2: Use Linux VM (Ubuntu/Debian)"
+echo "Option 1: Use Linux VM (Ubuntu/Debian)"
 echo "  1. Install VirtualBox or VMware"
 echo "  2. Create Ubuntu 22.04 VM"
 echo "  3. Copy ghostpi folder to VM"
 echo "  4. Run: sudo ./scripts/build_linux.sh $CM_TYPE"
 echo ""
+echo "Option 2: Use Remote Linux Server"
+echo "  1. Copy ghostpi folder to Linux server"
+echo "  2. SSH into server"
+echo "  3. Run: sudo ./scripts/build_linux.sh $CM_TYPE"
+echo ""
 echo "Option 3: Use Raspberry Pi Imager (Simplest)"
 echo "  1. Download: https://www.raspberrypi.com/software/"
 echo "  2. Install Raspberry Pi OS to SD card"
 echo "  3. Boot Pi and run: sudo ./scripts/quick_install.sh"
+echo ""
+echo "Option 4: Use GitHub Actions (CI/CD)"
+echo "  See .github/workflows/build.yml"
 echo ""
 
 # Create a script that can be run on Linux

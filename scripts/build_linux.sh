@@ -145,8 +145,31 @@ if [ -f "$PROJECT_ROOT/services/swapfile-manager.sh" ]; then
     chmod +x "$ROOTFS_DIR/usr/local/bin/swapfile-manager.sh" 2>/dev/null || true
 fi
 
+# Copy partition files to LinuxBootImageFileGenerator directory (it expects files there)
+echo "Copying partition files to image generator..."
+mkdir -p "$IMAGE_GEN_DIR/Image_partitions"
+rm -rf "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat" "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3" "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext4" 2>/dev/null || true
+cp -r "$BOOT_DIR" "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat" 2>/dev/null || true
+cp -r "$ROOTFS_DIR" "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3" 2>/dev/null || true
+
+# Create minimal device tree file (LinuxBootImageFileGenerator requires this)
+echo "Creating device tree file..."
+cat > "$IMAGE_GEN_DIR/ghostpi.dts" <<'DTS'
+/dts-v1/;
+/ {
+    model = "GhostPi";
+    compatible = "raspberrypi,4-model-b", "brcm,bcm2711";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    
+    chosen {
+        bootargs = "console=serial0,115200 console=tty1 root=PARTUUID=12345678-02 rootfstype=ext4 fsck.repair=yes rootwait quiet splash";
+    };
+};
+DTS
+
 # Create XML configuration
-XML_CONFIG="$BUILD_DIR/ghostpi_${CM_TYPE,,}_config.xml"
+XML_CONFIG="$IMAGE_GEN_DIR/ghostpi_${CM_TYPE,,}_config.xml"
 cat > "$XML_CONFIG" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <ImageConfiguration>
@@ -163,7 +186,7 @@ cat > "$XML_CONFIG" <<EOF
         <Partition>
             <ID>2</ID>
             <Name>rootfs</Name>
-            <Filesystem>ext4</Filesystem>
+            <Filesystem>ext3</Filesystem>
             <Size>dynamic</Size>
             <DynamicSizeOffset>2GB</DynamicSizeOffset>
         </Partition>
@@ -172,12 +195,15 @@ cat > "$XML_CONFIG" <<EOF
 EOF
 
 echo "✓ Configuration created"
+echo "✓ Partition files copied to image generator"
 
 # Generate image
 echo "Generating bootable image..."
 cd "$IMAGE_GEN_DIR"
 
-if python3 LinuxBootImageGenerator.py "$XML_CONFIG" 2>&1; then
+# The LinuxBootImageFileGenerator is interactive, so we need to provide input
+# Use printf to provide all inputs at once (press Enter to continue, then 'N' for no compression)
+if printf "\nN\n" | python3 LinuxBootImageGenerator.py "$XML_CONFIG" 2>&1; then
     echo ""
     echo "=========================================="
     echo "✓ GhostPi image created successfully!"
