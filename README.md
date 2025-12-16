@@ -25,7 +25,7 @@ A custom bootable Raspberry Pi image with dual boot splash themes, pentesting to
 
 ## 🚀 Quick Start by Platform
 
-### 📱 For Raspberry Pi / Debian (On Device)
+### 📱 For Debian / Raspberry Pi OS (On Device Installation)
 
 **Method 1: Quick Install on Existing Raspberry Pi OS**
 
@@ -121,9 +121,7 @@ scp user@vm-ip:~/Downloads/ghostpi/GhostPi-*.img ~/Downloads/
 2. Enable SSH in settings (gear icon)
 3. SSH into Pi and run quick install (see Debian section above)
 
-### 🐧 For Linux (Ubuntu/Debian)
-
-**Build from Source:**
+### 🐧 For Linux (Ubuntu/Debian - Build from Source)
 
 ```bash
 # Clone repository
