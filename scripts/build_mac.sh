@@ -35,6 +35,11 @@ RUN apt-get update && \
     binfmt-support \
     dosfstools \
     fdisk \
+    parted \
+    kpartx \
+    qemu-utils \
+    timeout \
+    coreutils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -52,13 +57,14 @@ DOCKERFILE
     if [ "$USE_DOCKER" != "false" ]; then
         # Run build in Docker
         echo "Running build in Docker container..."
-        docker run --rm -it \
+        docker run --rm --privileged \
             -v "$PROJECT_ROOT:/build" \
-            -v "$HOME/Downloads/ghostpi:/output" \
+            -v "$HOME/Downloads:/output" \
             -e CM_TYPE="$CM_TYPE" \
             -e OUTPUT_DIR="/output" \
+            -e HACKBERRY_REPO="/build/../hackberrypicm5-main" \
             ghostpi-builder \
-            bash -c "cd /build && OUTPUT_DIR=/output ./scripts/build_linux.sh $CM_TYPE"
+            bash -c "cd /build && chmod +x scripts/*.sh && OUTPUT_DIR=/output ./scripts/build_hackberry_integrated.sh $CM_TYPE"
         
         echo ""
         echo "=========================================="
