@@ -2,7 +2,8 @@
 # GhostPi Auto-Update Service
 # Automatically updates system packages and GhostPi components
 
-set -e
+# Don't use set -e, handle errors gracefully
+set +e
 
 LOG_FILE="/var/log/ghostpi-auto-update.log"
 LOCK_FILE="/var/run/ghostpi-auto-update.lock"
@@ -124,14 +125,20 @@ update_ghostpi_components() {
 check_health() {
     log "Running health check..."
     
-    # Check critical services
-    local services=("swapfile-manager" "auto-update")
+    # Check critical services (check for any variant)
+    local services=("swapfile-manager" "swapfile-manager-2025" "swapfile-manager-ai")
     for service in "${services[@]}"; do
         if ! systemctl is-active --quiet "$service.service" 2>/dev/null; then
             log "WARNING: Service $service is not running"
             systemctl restart "$service.service" 2>/dev/null || true
         fi
     done
+    
+    # Check auto-update timer is active
+    if ! systemctl is-active --quiet auto-update.timer 2>/dev/null; then
+        log "WARNING: Auto-update timer is not active, restarting..."
+        systemctl start auto-update.timer 2>/dev/null || true
+    fi
     
     # Check disk space
     local disk_usage=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
@@ -153,31 +160,64 @@ case "${1:-update}" in
         lock
         log "Starting auto-update..."
         
-        update_system_packages
-        update_ghostpi_components
+        # Update system packages (non-fatal if it fails)
+        if ! update_system_packages; then
+            log "System package update had issues, continuing..."
+        fi
         
-        log "Auto-update completed successfully"
+        # Update GhostPi components (non-fatal if it fails)
+        if ! update_ghostpi_components; then
+            log "GhostPi component update had issues, continuing..."
+        fi
+        
+        log "Auto-update completed"
+        unlock
+        exit 0
+        ;;
+    check-health)
+        check_health
+        exit 0
         ;;
     check)
         check_health
+        exit 0
         ;;
     force)
         lock
         log "Force update requested..."
         rm -rf /opt/ghostpi/repo
-        update_ghostpi_components
+        
+        # Force update should fail if component update fails
+        if ! update_ghostpi_components; then
+            log "ERROR: Force update failed"
+            unlock
+            exit 1
+        fi
+        
+        log "Force update completed successfully"
+        unlock
+        exit 0
         ;;
     status)
         if [ -f "$LOCK_FILE" ]; then
-            echo "Update in progress (PID: $(cat $LOCK_FILE))"
+            echo "Update in progress (PID: $(cat $LOCK_FILE 2>/dev/null || echo 'unknown'))"
         else
             echo "No update in progress"
         fi
         echo ""
-        echo "Last update: $(tail -1 $LOG_FILE 2>/dev/null || echo 'Never')"
+        if [ -f "$LOG_FILE" ]; then
+            echo "Last update log entry:"
+            tail -1 "$LOG_FILE" 2>/dev/null || echo "Never"
+        else
+            echo "No update log found"
+        fi
+        echo ""
+        echo "Timer status:"
+        systemctl status auto-update.timer --no-pager -l 2>/dev/null || echo "Timer not found"
+        exit 0
         ;;
     *)
-        echo "Usage: $0 {update|check|force|status}"
+        echo "Usage: $0 {update|check|check-health|force|status}"
         exit 1
         ;;
 esac
