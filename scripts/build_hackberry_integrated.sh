@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 HACKBERRY_REPO="${HACKBERRY_REPO:-$HOME/Downloads/hackberrypicm5-main}"
 BUILD_DIR="${BUILD_DIR:-/tmp/ghostpi-build}"
-IMAGE_GEN_DIR="/tmp/LinuxBootImageFileGenerator"
+IMAGE_GEN_DIR="${IMAGE_GEN_DIR:-/tmp/ghostpi-LinuxBootImageFileGenerator}"
 CM_TYPE="${1:-CM5}"
 OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Downloads}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -59,7 +59,60 @@ apt-get install -y \
 # Clone LinuxBootImageFileGenerator
 if [ ! -f "$IMAGE_GEN_DIR/LinuxBootImageGenerator.py" ]; then
     echo "📥 Cloning LinuxBootImageFileGenerator..."
-    git clone https://github.com/robseb/LinuxBootImageFileGenerator.git "$IMAGE_GEN_DIR" 2>/dev/null || true
+    if ! git clone https://github.com/robseb/LinuxBootImageFileGenerator.git "$IMAGE_GEN_DIR" 2>/dev/null; then
+        echo "❌ Failed to clone LinuxBootImageFileGenerator"
+        exit 1
+    fi
+    # Verify clone succeeded
+    if [ ! -f "$IMAGE_GEN_DIR/LinuxBootImageGenerator.py" ]; then
+        echo "❌ LinuxBootImageGenerator.py not found after clone"
+        exit 1
+    fi
+fi
+
+# Patch generator to be more lenient - remove strict folder compatibility check
+if [ -f "$IMAGE_GEN_DIR/LinuxBootImageGenerator.py" ]; then
+    echo "🔧 Patching generator for compatibility..."
+    python3 <<PATCH_EOF
+import sys
+script_path = "$IMAGE_GEN_DIR/LinuxBootImageGenerator.py"
+
+with open(script_path, 'r') as f:
+    content = f.read()
+
+# Replace the strict check with a lenient one that removes non-matching items
+if "if not file in working_folder_pat:" in content:
+    lines = content.split('\n')
+    new_lines = []
+    i = 0
+    while i < len(lines):
+        if 'if not file in working_folder_pat:' in lines[i]:
+            # Keep the if statement
+            new_lines.append(lines[i])
+            i += 1
+            # Skip the error print statements and sys.exit()
+            while i < len(lines) and ('ERROR:' in lines[i] or 'Please delete' in lines[i] or 'sys.exit()' in lines[i] or '        Please delete' in lines[i] or '         to generate' in lines[i]):
+                i += 1
+            # Add removal logic instead
+            new_lines.append('                    # Auto-remove non-matching items')
+            new_lines.append('                    import shutil')
+            new_lines.append('                    file_path = os.path.join(image_folder_name, file)')
+            new_lines.append('                    if os.path.isdir(file_path):')
+            new_lines.append('                        shutil.rmtree(file_path)')
+            new_lines.append('                    else:')
+            new_lines.append('                        os.remove(file_path)')
+        else:
+            new_lines.append(lines[i])
+            i += 1
+    content = '\n'.join(new_lines)
+    
+    with open(script_path, 'w') as f:
+        f.write(content)
+    print("✓ Generator patched successfully")
+else:
+    print("⚠️  Could not find exact pattern, generator may need manual patching")
+PATCH_EOF
+    echo "  Patch applied"
 fi
 
 # Create build directory
@@ -357,11 +410,36 @@ mkdir -p "$ROOTFS_DIR/var/lib/ghostpi"
 # Copy partition files to LinuxBootImageFileGenerator directory
 echo "📦 Preparing image partitions..."
 # Remove entire Image_partitions folder to ensure clean state
-rm -rf "$IMAGE_GEN_DIR/Image_partitions" 2>/dev/null || true
+# The generator is very strict - any extra files/folders will cause failure
+if [ -d "$IMAGE_GEN_DIR/Image_partitions" ]; then
+    echo "🧹 Removing old Image_partitions directory..."
+    rm -rf "$IMAGE_GEN_DIR/Image_partitions" 2>/dev/null || true
+    # Wait a moment to ensure filesystem sync
+    sleep 0.5
+fi
+# Create only the exact partition folders expected by the XML config
+# XML has: Pat_1_vfat, Pat_2_ext3, Pat_3_raw
 mkdir -p "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat"
 mkdir -p "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3"
-cp -r "$BOOT_DIR"/* "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat/" 2>/dev/null || true
-cp -r "$ROOTFS_DIR"/* "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3/" 2>/dev/null || true
+# Copy files (ensure no hidden files are left behind)
+# Use rsync if available for better file copying, otherwise use cp
+if command -v rsync >/dev/null 2>&1; then
+    rsync -a "$BOOT_DIR/" "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat/" 2>/dev/null || true
+    rsync -a "$ROOTFS_DIR/" "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3/" 2>/dev/null || true
+else
+    cp -r "$BOOT_DIR"/* "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat/" 2>/dev/null || true
+    cp -r "$ROOTFS_DIR"/* "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3/" 2>/dev/null || true
+fi
+# Remove any macOS-specific files that might cause issues
+find "$IMAGE_GEN_DIR/Image_partitions" -name ".DS_Store" -delete 2>/dev/null || true
+find "$IMAGE_GEN_DIR/Image_partitions" -name "._*" -delete 2>/dev/null || true
+# Verify files were copied
+if [ ! "$(ls -A "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat/" 2>/dev/null)" ]; then
+    echo "⚠️  WARNING: Pat_1_vfat is empty!"
+fi
+if [ ! "$(ls -A "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3/" 2>/dev/null)" ]; then
+    echo "⚠️  WARNING: Pat_2_ext3 is empty!"
+fi
 
 # Create XML configuration
 XML_CONFIG="$IMAGE_GEN_DIR/ghostpi_hackberry_${CM_TYPE,,}_config.xml"
@@ -390,6 +468,8 @@ cat > "$XML_CONFIG" <<EOF
 </ImageConfiguration>
 EOF
 
+cp "$XML_CONFIG" "$IMAGE_GEN_DIR/DistroBlueprint.xml" 2>/dev/null || true
+
 echo "✓ Configuration created"
 echo "✓ Partition files prepared"
 
@@ -409,11 +489,40 @@ cat > "$IMAGE_GEN_DIR/ghostpi.dts" <<'DTS'
 };
 DTS
 
+if ! dtc -I dts -O dtb -o "$IMAGE_GEN_DIR/ghostpi.dtbo" "$IMAGE_GEN_DIR/ghostpi.dts" 2>/dev/null; then
+    echo "❌ Failed to compile device tree (ghostpi.dts)."
+    exit 1
+fi
+cp "$IMAGE_GEN_DIR/ghostpi.dts" "$IMAGE_GEN_DIR/DistroBlueprint.dts" 2>/dev/null || true
+cp "$IMAGE_GEN_DIR/ghostpi.dtbo" "$IMAGE_GEN_DIR/DistroBlueprint.dtbo" 2>/dev/null || true
+
 # Generate image
 echo ""
 echo "🔨 Generating bootable image..."
 echo "   This may take several minutes..."
+
+# Debug: Verify files exist before running generator
+echo "🔍 Verifying partition files..."
+if [ -d "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat" ]; then
+    BOOT_FILE_COUNT=$(find "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat" -type f | wc -l)
+    echo "   Pat_1_vfat: $BOOT_FILE_COUNT files"
+    if [ "$BOOT_FILE_COUNT" -eq 0 ]; then
+        echo "   ⚠️  WARNING: Pat_1_vfat is empty! Listing directory:"
+        ls -la "$IMAGE_GEN_DIR/Image_partitions/Pat_1_vfat/" | head -10
+    fi
+fi
+if [ -d "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3" ]; then
+    ROOTFS_FILE_COUNT=$(find "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3" -type f | wc -l)
+    echo "   Pat_2_ext3: $ROOTFS_FILE_COUNT files"
+    if [ "$ROOTFS_FILE_COUNT" -eq 0 ]; then
+        echo "   ⚠️  WARNING: Pat_2_ext3 is empty! Listing directory:"
+        ls -la "$IMAGE_GEN_DIR/Image_partitions/Pat_2_ext3/" | head -10
+    fi
+fi
+
 cd "$IMAGE_GEN_DIR"
+echo "   Working directory: $(pwd)"
+echo "   Image_partitions exists: $([ -d "Image_partitions" ] && echo "yes" || echo "no")"
 
 # Save original pipefail state and enable it to catch failures in pipeline
 PIPEFAIL_ORIGINAL=$(set +o | grep pipefail)

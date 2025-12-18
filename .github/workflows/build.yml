@@ -47,35 +47,33 @@ jobs:
           parted \
           kpartx \
           qemu-utils \
+          xinput-calibrator \
+          coreutils \
           || true
     
     - name: Clone LinuxBootImageFileGenerator
       run: |
         git clone https://github.com/robseb/LinuxBootImageFileGenerator.git /tmp/LinuxBootImageFileGenerator
     
-    - name: Build CM5 Image
-      if: github.event.inputs.cm_type == 'CM5' || github.event.inputs.cm_type == '' || github.ref == 'refs/heads/main' || github.event_name == 'push'
+    - name: Clone HackberryPi CM5 Repository
       run: |
+        git clone https://github.com/ZitaoTech/HackberryPiCM5.git $HOME/Downloads/hackberrypicm5-main || true
+    
+    - name: Build CM5 Image
+      if: github.event.inputs.cm_type == 'CM5' || (github.event.inputs.cm_type == '' && github.event_name == 'workflow_dispatch') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      run: |
+        cd "${{ github.workspace }}"
         chmod +x scripts/*.sh
-        sudo ./scripts/build_simple.sh CM5 || \
-        sudo ./scripts/build_linux_robust.sh CM5 || \
-        sudo ./scripts/build_linux_fixed.sh CM5 || \
-        sudo ./scripts/build_linux.sh CM5 || \
-        echo "All build methods failed, but continuing..."
-      continue-on-error: true
-      timeout-minutes: 30
+        sudo -E env OUTPUT_DIR="${{ github.workspace }}" HACKBERRY_REPO="$HOME/Downloads/hackberrypicm5-main" ./scripts/build_hackberry_integrated.sh CM5
+      timeout-minutes: 45
     
     - name: Build CM4 Image
       if: github.event.inputs.cm_type == 'CM4'
       run: |
+        cd "${{ github.workspace }}"
         chmod +x scripts/*.sh
-        sudo ./scripts/build_simple.sh CM4 || \
-        sudo ./scripts/build_linux_robust.sh CM4 || \
-        sudo ./scripts/build_linux_fixed.sh CM4 || \
-        sudo ./scripts/build_linux.sh CM4 || \
-        echo "All build methods failed, but continuing..."
-      continue-on-error: true
-      timeout-minutes: 30
+        sudo -E env OUTPUT_DIR="${{ github.workspace }}" HACKBERRY_REPO="$HOME/Downloads/hackberrypicm5-main" ./scripts/build_hackberry_integrated.sh CM4
+      timeout-minutes: 45
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3

@@ -38,7 +38,6 @@ RUN apt-get update && \
     parted \
     kpartx \
     qemu-utils \
-    timeout \
     coreutils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -61,8 +60,9 @@ DOCKERFILE
             -v "$PROJECT_ROOT:/build" \
             -v "$HOME/Downloads:/output" \
             -e CM_TYPE="$CM_TYPE" \
+            -e IMAGE_GEN_DIR="/tmp/ghostpi-LinuxBootImageFileGenerator" \
             -e OUTPUT_DIR="/output" \
-            -e HACKBERRY_REPO="/build/../hackberrypicm5-main" \
+            -e HACKBERRY_REPO="/output/hackberrypicm5-main" \
             ghostpi-builder \
             bash -c "cd /build && chmod +x scripts/*.sh && OUTPUT_DIR=/output ./scripts/build_hackberry_integrated.sh $CM_TYPE"
         
@@ -70,7 +70,9 @@ DOCKERFILE
         echo "=========================================="
         echo "✓ Build complete!"
         echo "=========================================="
-        echo "Image location: $HOME/Downloads/ghostpi/"
+        echo "Image location: $HOME/Downloads/"
+        echo ""
+        echo "Look for: GhostPi-HackberryPi-${CM_TYPE}-*.img"
         exit 0
     fi
 fi
